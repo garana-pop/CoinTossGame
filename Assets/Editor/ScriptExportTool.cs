@@ -17,7 +17,7 @@ public class ScriptExportTool : EditorWindow
     #region Private Fields
 
     [SerializeField] private bool debugMode = true;
-    [SerializeField] private string outputDirectory = "C:/Users/wakam/Desktop/CoinTossGame_Export";
+    [SerializeField] private string outputDirectory = "C:/Users/wakam/Desktop/アイデア/「コイン投げ入れゲーム」（仮）/Claudeに提供するもの/スクリプト_GitHub最新Push";
     [SerializeField] private bool includeSubfolders = true;
     [SerializeField] private bool addFileExtensionToName = true;
     [SerializeField] private bool createSubfolderStructure = true;
@@ -44,7 +44,9 @@ public class ScriptExportTool : EditorWindow
     [SerializeField] private string gitCommitMessage = "Update scripts";
 
     private enum TabType { AllFiles, GitLatest, GitPush }
-    private TabType currentTab = TabType.AllFiles;
+
+    // デフォルトはGitPushタブを表示
+    private TabType currentTab = TabType.GitPush;
 
     // プロジェクトルートパス（Assetsの一つ上）
     private string ProjectRootPath => Application.dataPath.Replace("/Assets", "").Replace("\\Assets", "");
