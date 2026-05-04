@@ -1,3 +1,4 @@
+// GameManager.cs
 using UnityEngine;
 
 /// <summary>
@@ -6,14 +7,16 @@ using UnityEngine;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private bool debugMode; // デバッグモードフラグ
+    // ---- 内部状態 ----
+    private GameStateMachine stateMachine; // 状態管理の専任クラス
 
-    private GameStateMachine stateMachine; // 状態管理
+    // -------------------------------------------------------
 
     private void Awake() => stateMachine = new GameStateMachine();
 
     private void OnEnable()
     {
+        GameEventBus.OnCoinThrown += HandleCoinThrown;
         GameEventBus.OnCoinLanded += HandleCoinLanded;
         GameEventBus.OnEnemyDefeated += HandleEnemyDefeated;
         GameEventBus.OnPowerUpSelected += HandlePowerUpSelected;
@@ -21,6 +24,7 @@ public class GameManager : MonoBehaviour
 
     private void OnDisable()
     {
+        GameEventBus.OnCoinThrown -= HandleCoinThrown;
         GameEventBus.OnCoinLanded -= HandleCoinLanded;
         GameEventBus.OnEnemyDefeated -= HandleEnemyDefeated;
         GameEventBus.OnPowerUpSelected -= HandlePowerUpSelected;
@@ -28,38 +32,22 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // ゲーム開始時に投擲状態へ遷移しウェーブを開始する
         stateMachine.Transition(GameStateMachine.State.Launching);
         GameEventBus.PublishWaveStarted();
-
-        if (debugMode)
-        {
-            Debug.Log($"{nameof(GameManager)}: ゲーム開始 / 初期ウェーブ発火");
-        }
     }
 
-    /// <summary>コイン着地後の遷移処理</summary>
-    /// <param name="score">着地で得たスコア</param>
-    private void HandleCoinLanded(int score)
-    {
-        stateMachine.Transition(GameStateMachine.State.ShowingScore);
+    /// <summary>コイン投擲後の遷移処理（着地判定フェーズへ）</summary>
+    private void HandleCoinThrown()
+        => stateMachine.Transition(GameStateMachine.State.Judging);
 
-        if (debugMode)
-        {
-            Debug.Log($"{nameof(GameManager)}: コイン着地 / score={score}");
-        }
-    }
+    /// <summary>コイン着地後の遷移処理（スコア表示フェーズへ）</summary>
+    /// <param name="coinCount">現在皿の上にあるコイン枚数</param>
+    private void HandleCoinLanded(int coinCount)
+        => stateMachine.Transition(GameStateMachine.State.ShowingScore);
 
     /// <summary>敵撃破後の遷移処理</summary>
     private void HandleEnemyDefeated()
-    {
-        stateMachine.Transition(GameStateMachine.State.PowerUp);
-
-        if (debugMode)
-        {
-            Debug.Log($"{nameof(GameManager)}: 敵撃破 / パワーアップ選択へ遷移");
-        }
-    }
+        => stateMachine.Transition(GameStateMachine.State.PowerUp);
 
     /// <summary>パワーアップ選択後の遷移処理</summary>
     private void HandlePowerUpSelected()
@@ -67,10 +55,5 @@ public class GameManager : MonoBehaviour
         stateMachine.Transition(GameStateMachine.State.WaveTransit);
         stateMachine.Transition(GameStateMachine.State.Launching);
         GameEventBus.PublishWaveStarted();
-
-        if (debugMode)
-        {
-            Debug.Log($"{nameof(GameManager)}: パワーアップ選択完了 / 次ウェーブ発火");
-        }
     }
 }
