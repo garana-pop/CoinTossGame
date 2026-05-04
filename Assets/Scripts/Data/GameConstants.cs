@@ -9,10 +9,16 @@ public static class GameConstants
     // -------------------------------------------------------------------------
 
     // 投擲チャージの最小値
-    public const float MIN_LAUNCH_FORCE = 3f;
+    public const float MIN_LAUNCH_FORCE = 3f; // 投擲力の最小値
 
     // 投擲チャージの最大値
-    public const float MAX_LAUNCH_FORCE = 15f;
+    public const float MAX_LAUNCH_FORCE = 15f; // 投擲力の最大値
+
+    // ホイール速度が この値 を超えたとき投擲を判定する（単位: delta/sec）
+    public const float WHEEL_VELOCITY_THRESHOLD = 1.5f;
+
+    // ホイール速度 → 投擲力 への変換係数
+    public const float WHEEL_VELOCITY_TO_FORCE_SCALE = 5f;
 
     // -------------------------------------------------------------------------
     // パワーアップ
@@ -35,8 +41,8 @@ public static class GameConstants
     // スコア
     // -------------------------------------------------------------------------
 
-    // 器の中心に近いほど加算されるボーナス倍率の最大値
-    public const float MAX_SCORE_MULTIPLIER = 3f;
+    // 皿の上のコイン1枚あたりのスコア（= 敵へのダメージ）
+    public const int SCORE_PER_COIN = 10;
 
     // -------------------------------------------------------------------------
     // UI演出
