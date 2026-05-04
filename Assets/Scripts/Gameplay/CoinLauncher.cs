@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// マウスホイールの速度を検知し、閾値を超えたとき自動でコインを投擲するクラス。
 /// 投擲責任のみを持ち、着地判定はVessel側に委譲する。
+/// ※※マウスホイールを前に回したときのみ、コインを投擲するように修正が必要※※
 /// </summary>
 public class CoinLauncher : MonoBehaviour
 {
