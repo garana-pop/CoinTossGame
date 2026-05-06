@@ -33,9 +33,9 @@ public class Vessel : MonoBehaviour
                 rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             }
 
-            // 器（親オブジェクト）の子供に設定して、相対的な安定性を高める
-            // ただし Rigidbody は dynamic のままなので、押し出されることは可能
-            other.transform.SetParent(transform.parent);
+            // 親子関係を設定すると非一様スケールの影響で歪む可能性があるため、
+            // 物理挙動のみで管理する（安定性が十分であれば親子関係は不要）
+            // other.transform.SetParent(transform.parent);
 
             if (debugMode)
             {
@@ -52,14 +52,10 @@ public class Vessel : MonoBehaviour
         {
             GameEventBus.PublishCoinLanded(coinsInVessel.Count);
 
-            // 器から離れたら親子関係を解除
-            if (other.transform.parent == transform.parent)
+            // 器から離れた際の物理設定の復元
+            if (other.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
-                other.transform.SetParent(null);
-                if (other.TryGetComponent<Rigidbody>(out Rigidbody rb))
-                {
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                }
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             }
 
             if (debugMode)
