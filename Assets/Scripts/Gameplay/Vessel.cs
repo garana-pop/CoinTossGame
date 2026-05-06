@@ -24,12 +24,12 @@ public class Vessel : MonoBehaviour
         {
             GameEventBus.PublishCoinLanded(coinsInVessel.Count);
 
-            // コインの速度を少し減衰させて器の上に留まりやすくする（任意）
+            // コインの速度を減衰させて器の上に留まりやすくする
             if (other.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
-                rb.linearVelocity *= 0.8f;
-                rb.angularVelocity *= 0.8f;
-                // 高速な移動による貫通を防ぐ
+                rb.linearVelocity *= 0.5f; // 50%に減衰
+                rb.angularVelocity *= 0.5f;
+                // 高速な移動による貫通を防止
                 rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             }
 
