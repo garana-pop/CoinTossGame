@@ -1,54 +1,51 @@
 using UnityEngine;
 
 /// <summary>
-/// �Q�[���̏�ԑJ�ڂ�Ǘ�����N���X�B
-/// ��Ԃ̒ǉ��E�J�ڃ��[���̕ύX�͂��̃N���X�݂̂�C������B
+/// ゲームの状態遷移を管理するクラス。
+/// 状態の追加・遷移ルールの変更はこのクラスのみを修正する。
 /// </summary>
 public class GameStateMachine
 {
-    // �Q�[���̏�Ԃ�\���񋓌^
     public enum State
     {
-        Idle,         // �ҋ@��
-        Launching,    // �R�C��������
-        Judging,      // ���n���蒆
-        ShowingScore, // �X�R�A�\����
-        PowerUp,      // �p���[�A�b�v�I��
-        WaveTransit   // �E�F�[�u�ڍs��
+        Idle,           // 待機中
+        Launching,      // コイン投入フェーズ（プレイヤーフェーズ）
+        Judging,        // 静止判定中
+        DamagePhase,    // プレイヤー攻撃（敵へのダメージ）
+        EnemyPhase,     // 敵フェーズ（敵の攻撃）
+        PowerUp,        // パワーアップ選択
+        WaveTransit,    // ウェーブ移行中
+        GameOver        // ゲームオーバー
     }
 
-    public State Current { get; private set; } = State.Idle; // ���݂̏��
+    public State Current { get; private set; } = State.Idle;
 
-    /// <summary>�w�肵����Ԃ֑J�ڂ���B�s���J�ڂ̓��O��o���ăX�L�b�v����B</summary>
-    /// <param name="next">�J�ڐ�̏��</param>
     public void Transition(State next)
     {
         if (Current == next) return;
 
         if (!IsValidTransition(Current, next))
         {
-            Debug.LogWarning($"{nameof(GameStateMachine)}: �����ȑJ�� {Current} �� {next}");
+            Debug.LogWarning($"{nameof(GameStateMachine)}: 不正な遷移 {Current} -> {next}");
             return;
         }
 
-        // �J�ڃ��O�̏o��
-        Debug.Log($"{nameof(GameStateMachine)}: {Current} �� {next}");
+        Debug.Log($"{nameof(GameStateMachine)}: {Current} -> {next}");
         Current = next;
     }
 
-    /// <summary>�J�ڂ̍��@������؂���B�V������Ԃ�ǉ�����ꍇ�͂����ɒǋL����B</summary>
-    /// <param name="from">�J�ڌ��̏��</param>
-    /// <param name="to">�J�ڐ�̏��</param>
-    /// <returns>�J�ڂ����@�ł���� true�A�s���ł���� false</returns>
     private bool IsValidTransition(State from, State to) => (from, to) switch
     {
         (State.Idle, State.Launching) => true,
         (State.Launching, State.Judging) => true,
-        (State.Judging, State.ShowingScore) => true,
-        (State.ShowingScore, State.Launching) => true,
-        (State.ShowingScore, State.PowerUp) => true,
+        (State.Judging, State.DamagePhase) => true,
+        (State.DamagePhase, State.EnemyPhase) => true,
+        (State.DamagePhase, State.PowerUp) => true,
+        (State.EnemyPhase, State.Launching) => true,
+        (State.EnemyPhase, State.GameOver) => true,
         (State.PowerUp, State.WaveTransit) => true,
         (State.WaveTransit, State.Launching) => true,
+        (State.GameOver, State.Idle) => true,
         _ => false
     };
 }

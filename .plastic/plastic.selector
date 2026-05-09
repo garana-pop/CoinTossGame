@@ -1,0 +1,4 @@
+repository "CoinTossGame/CoinTossGame@15669539741791@cloud"
+  path "/"
+    br "/main"
+    co "/main"

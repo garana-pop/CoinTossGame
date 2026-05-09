@@ -13,8 +13,11 @@ public class Vessel : MonoBehaviour
 
     // ---- 内部状態 ----
     private readonly HashSet<Collider> coinsInVessel = new HashSet<Collider>();
+    private float dampeningFactor = 0.5f;
 
     // -------------------------------------------------------
+
+    public void IncreaseDampening(float amount) => dampeningFactor = Mathf.Max(0, dampeningFactor - amount);
 
     private void OnTriggerEnter(Collider other)
     {
@@ -27,10 +30,10 @@ public class Vessel : MonoBehaviour
             // コインの速度を減衰させて器の上に留まりやすくする
             if (other.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
-                rb.linearVelocity *= 0.5f; // 50%に減衰
-                rb.angularVelocity *= 0.5f;
+                rb.linearVelocity *= dampeningFactor;
+                rb.angularVelocity *= dampeningFactor;
                 // 高速な移動による貫通を防止
-                rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             }
 
             // 親子関係を設定すると非一様スケールの影響で歪む可能性があるため、
@@ -68,9 +71,16 @@ public class Vessel : MonoBehaviour
     /// <summary>現在のコイン数を取得</summary>
     public int GetCoinCount() => coinsInVessel.Count;
 
-    /// <summary>ウェーブ開始時などにカウントをクリアする</summary>
+    /// <summary>器の上にある全てのコインを削除し、カウントをクリアする</summary>
     public void ResetCoins()
     {
+        foreach (var col in coinsInVessel)
+        {
+            if (col != null && col.gameObject != null)
+            {
+                Destroy(col.gameObject);
+            }
+        }
         coinsInVessel.Clear();
         GameEventBus.PublishCoinLanded(0);
     }

@@ -1,6 +1,7 @@
-﻿// CoinLauncher.cs
+// CoinLauncher.cs
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 /// <summary>
 /// マウスホイールの速度を検知し、閾値を超えたとき自動でコインを投擲するクラス。
@@ -15,17 +16,23 @@ public class CoinLauncher : MonoBehaviour
     [SerializeField] private bool debugMode;   // デバッグログの有無
 
     // ---- 内部状態 ----
-    private float peakWheelVelocity = 0f;  // スクロール中に記録した最大速度（絶対値）
+    private float peakWheelVelocity = 0f;  // スクロール中に記録した最大速度
     private bool wasScrolling = false; // 前フレームにスクロールしていたか
+    private int coinsPerLaunch = 1; // 1回の操作で発射されるコインの数
 
     // -------------------------------------------------------
+
+    public void SetCoinsPerLaunch(int count) => coinsPerLaunch = count;
+    public void AddCoinsPerLaunch(int amount) => coinsPerLaunch += amount;
+    public void ChangeCoinPrefab(GameObject newPrefab) => coinPrefab = newPrefab;
 
     private void Update()
     {
         // 新Input Systemでのホイール取得
         float scroll = Mouse.current.scroll.ReadValue().y / 120f;
 
-        if (scroll != 0f)
+        // 企画書に従い、前方向（正の値）のスクロールのみを検知するように制限
+        if (scroll > 0f)
         {
             HandleScrolling(scroll);
         }
@@ -37,11 +44,11 @@ public class CoinLauncher : MonoBehaviour
     }
 
     /// <summary>スクロール中のホイール速度を計測し、ピーク値を更新する</summary>
-    /// <param name="scroll">今フレームのスクロール量（Mouse ScrollWheel）</param>
+    /// <param name="scroll">今フレームのスクロール量</param>
     private void HandleScrolling(float scroll)
     {
-        // delta / deltaTime で 1秒あたりの速度（絶対値）を算出
-        float currentVelocity = Mathf.Abs(scroll) / Time.deltaTime;
+        // 速度（絶対値）を算出
+        float currentVelocity = scroll / Time.deltaTime;
 
         // 最大速度を更新
         peakWheelVelocity = Mathf.Max(peakWheelVelocity, currentVelocity);
@@ -72,11 +79,21 @@ public class CoinLauncher : MonoBehaviour
             GameConstants.MAX_LAUNCH_FORCE
         );
 
-        LaunchCoin(launchForce);
+        // 複数枚発射に対応
+        StartCoroutine(LaunchMultipleCoins(launchForce));
+    }
+
+    private IEnumerator LaunchMultipleCoins(float force)
+    {
+        for (int i = 0; i < coinsPerLaunch; i++)
+        {
+            LaunchCoin(force);
+            if (coinsPerLaunch > 1) yield return new WaitForSeconds(0.05f);
+        }
     }
 
     /// <summary>指定した力でコインを発射し、投擲イベントを発火する</summary>
-    /// <param name="force">投擲力（MIN_LAUNCH_FORCE ～ MAX_LAUNCH_FORCE）</param>
+    /// <param name="force">投擲力</param>
     private void LaunchCoin(float force)
     {
         // coinPrefab が未設定の場合は早期リターン
