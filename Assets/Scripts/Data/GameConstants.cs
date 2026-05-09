@@ -23,6 +23,7 @@ public static class GameConstants
 
     // ---- スコア・ダメージ ----
     public const int SCORE_PER_COIN = 10; // 器に乗ったコイン1枚あたりのダメージ
+    public const float COIN_LIFESPAN = 15.0f; // 器に入らなかったコインの消滅時間
 
     // ---- UI演出用ウェイト ----
     public const float JUDGE_DURATION = 2.0f; // 静止判定待機時間

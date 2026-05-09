@@ -27,6 +27,12 @@ public class Vessel : MonoBehaviour
         {
             GameEventBus.PublishCoinLanded(coinsInVessel.Count);
 
+            // 寿命タイマーを停止
+            if (other.TryGetComponent<CoinLifespan>(out var lifespan))
+            {
+                lifespan.StopLifespan();
+            }
+
             // コインの速度を減衰させて器の上に留まりやすくする
             if (other.TryGetComponent<Rigidbody>(out Rigidbody rb))
             {
@@ -54,6 +60,12 @@ rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         if (coinsInVessel.Remove(other))
         {
             GameEventBus.PublishCoinLanded(coinsInVessel.Count);
+
+            // 寿命タイマーを再開
+            if (other.TryGetComponent<CoinLifespan>(out var lifespan))
+            {
+                lifespan.StartLifespan();
+            }
 
             // 器から離れた際の物理設定の復元
             if (other.TryGetComponent<Rigidbody>(out Rigidbody rb))

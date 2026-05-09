@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2760190461094779788}
   - component: {fileID: 735487656255450313}
   - component: {fileID: 3460902290159112316}
+  - component: {fileID: 2585158614563613315}
   m_Layer: 0
   m_Name: CubeCoin
   m_TagString: Coin
@@ -140,3 +141,15 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 3
+--- !u!114 &2585158614563613315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5910693835623700717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96f717e1dbe43b748ac33c91d6a1c0a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CoinLifespan
