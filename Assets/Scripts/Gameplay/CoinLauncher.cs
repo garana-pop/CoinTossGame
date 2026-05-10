@@ -16,8 +16,18 @@ public class CoinLauncher : MonoBehaviour
     [SerializeField, Range(0f, 0.5f)] private float jitterAmount = 0.05f; // 投擲方向のランダムな揺れ
     [SerializeField] private bool debugMode;   // デバッグログの有無
 
+    [Header("Effects Settings")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip[] shotSounds;
+    [SerializeField] private CameraShake cameraShake;
+    [SerializeField] private float minPitch = 0.8f;
+    [SerializeField] private float maxPitch = 1.2f;
+    [SerializeField] private float minShakeMagnitude = 0.05f;
+    [SerializeField] private float maxShakeMagnitude = 0.2f;
+    [SerializeField] private float shakeDuration = 0.1f;
+
     // ---- 内部状態 ----
-    private float peakWheelVelocity = 0f;  // スクロール中に記録した最大速度
+private float peakWheelVelocity = 0f;  // スクロール中に記録した最大速度
     private bool wasScrolling = false; // 前フレームにスクロールしていたか
     private int coinsPerLaunch = 1; // 1回の操作で発射されるコインの数
 
@@ -131,17 +141,45 @@ public class CoinLauncher : MonoBehaviour
             Debug.LogError($"{nameof(CoinLauncher)}: コインPrefabにRigidbodyが見つかりません。");
         }
 
+        // 演出：発射音とカメラシェイク
+        PlayLaunchEffects(force);
+
         // 投擲イベントを発火（GameManager が Judging へ遷移する）
-        GameEventBus.PublishCoinThrown();
+GameEventBus.PublishCoinThrown();
 
         if (debugMode)
         {
             Debug.Log($"{nameof(CoinLauncher)}: 投擲 force={force:F2}");
         }
-    }
+        }
 
-    /// <summary>スクロール状態をリセットする（停止検知後に呼び出す）</summary>
-    private void ResetScrollState()
+        /// <summary>
+        /// 発射時の演出（音声・カメラシェイク）を実行する。
+        /// </summary>
+        /// <param name="force">発射力</param>
+        private void PlayLaunchEffects(float force)
+        {
+        // 力の割合（0.0 ~ 1.0）を計算
+        float forcePercent = Mathf.InverseLerp(GameConstants.MIN_LAUNCH_FORCE, GameConstants.MAX_LAUNCH_FORCE, force);
+
+        // 発射音の再生
+        if (audioSource != null && shotSounds != null && shotSounds.Length > 0)
+        {
+            AudioClip clip = shotSounds[Random.Range(0, shotSounds.Length)];
+            audioSource.pitch = Mathf.Lerp(minPitch, maxPitch, forcePercent);
+            audioSource.PlayOneShot(clip);
+        }
+
+        // カメラシェイク
+        if (cameraShake != null)
+        {
+            float magnitude = Mathf.Lerp(minShakeMagnitude, maxShakeMagnitude, forcePercent);
+            cameraShake.Shake(shakeDuration, magnitude);
+        }
+        }
+
+        /// <summary>スクロール状態をリセットする（停止検知後に呼び出す）</summary>
+private void ResetScrollState()
     {
         peakWheelVelocity = 0f;
         wasScrolling = false;
