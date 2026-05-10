@@ -23,23 +23,60 @@ public static class GameEventBus
 
     // ---- Publishメソッド ----
 
+    /// <summary>
+    /// コインを投擲したことを購読者に通知します。
+    /// </summary>
     public static void PublishCoinThrown() => OnCoinThrown?.Invoke();
 
+    /// <summary>
+    /// コインが着地したことを購読者に通知します。
+    /// </summary>
+    /// <param name="coinCount">器の上に残っているコインの枚数</param>
     public static void PublishCoinLanded(int coinCount) => OnCoinLanded?.Invoke(coinCount);
 
+    /// <summary>
+    /// スコアの合計が更新されたことを購読者に通知します。
+    /// </summary>
+    /// <param name="totalScore">現在の合計スコア</param>
     public static void PublishScoreChanged(int totalScore) => OnScoreChanged?.Invoke(totalScore);
 
+    /// <summary>
+    /// 敵がダメージを受けたことを購読者に通知します。
+    /// </summary>
+    /// <param name="damage">与えたダメージ量</param>
+    /// <param name="remaining">敵の残りHP</param>
     public static void PublishEnemyDamaged(int damage, int remaining) => OnEnemyDamaged?.Invoke(damage, remaining);
 
+    /// <summary>
+    /// 敵を倒したことを購読者に通知します。
+    /// </summary>
     public static void PublishEnemyDefeated() => OnEnemyDefeated?.Invoke();
 
+    /// <summary>
+    /// プレイヤーがダメージを受けたことを購読者に通知します。
+    /// </summary>
+    /// <param name="damage">受けたダメージ量</param>
+    /// <param name="remaining">プレイヤーの残りHP</param>
     public static void PublishPlayerDamaged(int damage, int remaining) => OnPlayerDamaged?.Invoke(damage, remaining);
 
+    /// <summary>
+    /// プレイヤーが倒れたことを購読者に通知します。
+    /// </summary>
     public static void PublishPlayerDefeated() => OnPlayerDefeated?.Invoke();
 
+    /// <summary>
+    /// パワーアップが選択されたことを購読者に通知します。
+    /// </summary>
     public static void PublishPowerUpSelected() => OnPowerUpSelected?.Invoke();
 
+    /// <summary>
+    /// ウェーブが開始されたことを購読者に通知します。
+    /// </summary>
     public static void PublishWaveStarted() => OnWaveStarted?.Invoke();
-    
+
+    /// <summary>
+    /// 残り時間の更新を購読者に通知します。
+    /// </summary>
+    /// <param name="remainingTime">残り時間（秒）</param>
     public static void PublishTimerUpdated(float remainingTime) => OnTimerUpdated?.Invoke(remainingTime);
 }
