@@ -13,6 +13,7 @@ public class CoinLauncher : MonoBehaviour
     // ---- インスペクター設定 ----
     [SerializeField] private GameObject coinPrefab;  // 投擲するコインのPrefab
     [SerializeField] private Transform launchPoint; // コインを生成する発射位置
+    [SerializeField, Range(0f, 0.5f)] private float jitterAmount = 0.05f; // 投擲方向のランダムな揺れ
     [SerializeField] private bool debugMode;   // デバッグログの有無
 
     // ---- 内部状態 ----
@@ -110,12 +111,20 @@ public class CoinLauncher : MonoBehaviour
             return;
         }
 
-        // コインを生成し、launchPoint の前方向へ力を加える
+        // コインを生成し、launchPoint の前方向（揺れあり）へ力を加える
         GameObject coin = Instantiate(coinPrefab, launchPoint.position, launchPoint.rotation);
+
+        // 発射方向にランダムな揺れを加える
+        Vector3 launchDirection = launchPoint.forward;
+        if (jitterAmount > 0f)
+        {
+            Vector3 jitter = Random.insideUnitSphere * jitterAmount;
+            launchDirection = (launchDirection + jitter).normalized;
+        }
 
         if (coin.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
-            rb.AddForce(launchPoint.forward * force, ForceMode.Impulse);
+            rb.AddForce(launchDirection * force, ForceMode.Impulse);
         }
         else
         {
