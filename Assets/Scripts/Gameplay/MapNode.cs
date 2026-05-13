@@ -24,11 +24,16 @@ public class MapNode : MonoBehaviour
 
     private void OnNodeClicked()
     {
-        if (RunManager.Instance == null) return;
+        Debug.Log($"MapNode clicked: {data.nodeName} ({data.nodeType})");
+        if (RunManager.Instance == null)
+        {
+            Debug.LogError("RunManager.Instance is null! Cannot transition scene.");
+            return;
+        }
 
         switch (data.nodeType)
         {
-            case MapNodeData.NodeType.Battle:
+case MapNodeData.NodeType.Battle:
             case MapNodeData.NodeType.Boss:
                 RunManager.Instance.LoadBattle();
                 break;

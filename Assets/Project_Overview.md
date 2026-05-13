@@ -1,80 +1,81 @@
-# Project Overview: CoinTossGame
+# Coin Toss Roguelike - Technical Documentation
 
 ## 1. Project Description
-**CoinTossGame** is a physics-based battle game where the player launches coins into a "vessel" (container) to deal damage to enemies. The game combines rhythmic physical interaction (mouse wheel scrolling) with RPG elements like wave progression and power-ups.
-- **Core Experience**: Precision-based coin launching using physics, managing turn-based combat phases, and scaling difficulty through waves.
-- **Target Audience**: Casual players enjoying physical interaction and roguelike-lite progression.
+This project is a 3D Roguelike deck-builder/action game where the core mechanic revolves around tossing coins into a vessel. Instead of traditional cards, players use a mouse-wheel-based "launch" mechanic to flick coins into a target container. The number and type of coins successfully landed determine the damage dealt to enemies. The game features a run-based structure with a branching map, shops, and event nodes, following the core pillars of physics-based skill and strategic progression.
 
 ## 2. Gameplay Flow / User Loop
-1.  **Wave Start**: A new enemy is spawned with scaled HP.
-2.  **Player Phase (Launching)**: The player has a limited time (`GameConstants.TURN_TIME_LIMIT`) to launch as many coins as possible into the vessel using the mouse wheel.
-3.  **Judging Phase**: A brief pause (`GameConstants.JUDGE_DURATION`) to let the physics settle.
-4.  **Damage Phase**: Damage is calculated based on the count of coins inside the vessel and applied to the enemy.
-5.  **Enemy Phase**: If the enemy survives, it deals fixed damage to the player.
-6.  **PowerUp Phase**: Triggered after defeating an enemy; the player chooses an upgrade.
-7.  **GameOver**: Triggered if the player's HP reaches zero.
+1.  **Map Exploration**: The player starts at `MapScene`, selecting nodes (Battle, Store, Event) to progress through floors.
+2.  **Battle Setup**: Upon entering a `BattleScene`, the `RunManager` persists player stats, and `EnemyManager` scales enemy HP based on the current floor.
+3.  **The Battle Loop**:
+    *   **Player Phase (Launching)**: A timer starts (managed by `GameManager`). The player flicks the mouse wheel to launch coins.
+    *   **Judging Phase**: The system waits for physics to settle. `Vessel` tracks how many coins are inside its trigger.
+    *   **Damage Phase**: Total damage is calculated (Coins x Damage-per-coin) and applied to the enemy.
+    *   **Enemy Phase**: The enemy deals fixed damage to the player's HP.
+    *   **Reset**: The vessel is cleared, and the loop repeats until one side is defeated.
+4.  **Progression/Rewards**: Defeating enemies grants money and increases the floor counter. Players visit `StoreScene` to buy item upgrades or different coin prefabs.
+5.  **Shutdown/Game Over**: If player HP reaches zero, the run resets via `RunManager` and returns to the initial map/title.
 
 ## 3. Architecture
-The project follows a centralized state-driven architecture centered around a `GameManager` and an event-driven communication pattern.
+The project follows a **Decoupled Event-Driven Architecture** centered around a central bus.
 
-### Core Architecture
-- `GameManager`: The central brain of the game loop. It manages transitions between phases using a Coroutine-based loop and communicates with other systems.
-- `GameStateMachine`: A state machine implementation that governs the valid transitions between phases (e.g., `Launching` -> `Judging`).
-- `GameEventBus`: A static event hub using C# `Action` delegates. Most systems (UI, Managers, VFX) decouple from the core logic by subscribing to these events.
+*   **Central Event Bus**: `GameEventBus` serves as the primary communication hub using static C# events. Components subscribe to events (e.g., `OnCoinLanded`, `OnEnemyDamaged`) to update UI or trigger state changes without direct coupling.
+*   **State Management**: `GameStateMachine` defines the strict transition rules for the battle flow (Idle -> Launching -> Judging -> Damage -> Enemy -> etc.).
+*   **Global Persistence**: `RunManager` is a `DontDestroyOnLoad` singleton that tracks "cross-scene" data: Current HP, Money, Inventory, and the currently equipped Coin Prefab.
+*   **Main Entry Point**: `GameManager` (in BattleScene) coordinates the `GameLoop` coroutine, driving the `GameStateMachine` and interacting with specific scene systems.
 
-### Patterns
-- **State Pattern**: Used in `GameStateMachine` to control the game flow logic.
-- **Event Bus Pattern**: Used in `GameEventBus` to handle decoupling between logic (e.g., `EnemyManager`) and presentation (e.g., `BattleUI`).
-- **Manager Pattern**: Systems like `PlayerManager` and `EnemyManager` encapsulate specific domain data and logic.
-
-`Location: Assets/Scripts/Core`
+**Location**: `Assets/Scripts/Core`
 
 ## 4. Game Systems & Domain Concepts
 
-### Combat System
-The combat is a cycle of launching physical objects into a target area to convert them into damage.
-- `EnemyManager`: Manages enemy HP scaling per wave and damage reception.
-- `PlayerManager`: Manages player health and game-over conditions.
-- `ScoreManager`: Converts the count of coins in the vessel into an attack score/damage value.
+### Physics-Based Launch System
+*   `CoinLauncher`: Converts mouse wheel velocity into physical impulse. It uses `GameConstants` to scale wheel speed to force.
+*   `Vessel`: Uses a `HashSet<Collider>` to manage coins currently inside the scoring zone. It applies a `dampeningFactor` to incoming coins to increase the "catch" probability.
+*   `StageConfig`: An `[ExecuteAlways]` utility that synchronizes `PhysicsMaterial` bounciness settings across the scene in real-time.
+*   **Location**: `Assets/Scripts/Gameplay`
 
-`Location: Assets/Scripts/Systems`
+### Battle & Entity Management
+*   `EnemyManager`: Calculates scaling HP using the formula: `BaseHP * (1 + Floor * ScaleFactor)`.
+*   `PlayerManager`: Interface between the battle scene and the `RunManager` global HP.
+*   `ScoreManager`: Listens to the `Vessel` and converts coin counts into score/damage values.
+*   **Location**: `Assets/Scripts/Systems`
 
-### Physics Interaction System
-- `CoinLauncher`: Detects mouse wheel velocity. If the velocity exceeds `GameConstants.WHEEL_VELOCITY_THRESHOLD`, it instantiates coin prefabs with proportional impulse.
-- `Vessel`: Uses a `Trigger` and `HashSet<Collider>` to track coins currently inside the container. It applies linear/angular velocity dampening to coins that enter to keep them stable.
-- `KillZone`: Cleans up coins that fall off the stage or miss the vessel.
-
-`Location: Assets/Scripts/Gameplay`
-
-### Progression System
-- `PowerUpUI`: Displays choices for the player after a wave.
-- `GameConstants`: A static data holder for balancing parameters (HP, damage, thresholds).
+### Progress & Map System
+*   `MapManager`: Handles the logic for floor progression and node visibility.
+*   `MapNode`: Represents a clickable destination that triggers scene loads via `RunManager`.
+*   **Location**: `Assets/Scripts/Systems` and `Assets/Scripts/Gameplay`
 
 ## 5. Scene Overview
-The project is built around a single primary scene:
-- `BattleScene`: Contains the physical stage, the vessel, the coin launcher, and the UI canvas. This is the entry point and the main gameplay arena.
+*   **MapScene**: The hub where the player chooses the next encounter. Uses `MapNodeData` to define node types.
+*   **BattleScene**: The core gameplay scene containing the physics setup, vessel, launcher, and `GameManager` loop.
+*   **StoreScene / EventScene**: Utility scenes for progression (Implementation focused on UI-driven interactions with `RunManager`).
+*   **_Recovery**: Contains auto-saved or backup scene versions (Internal use).
 
-`Location: Assets/Scenes`
+**Location**: `Assets/Scenes`
 
 ## 6. UI System
-The project uses **UGUI** with **TextMesh Pro** for text rendering.
-- `BattleUI`: Displays HP bars (text-based), the turn timer, and current phase status. It subscribes to `GameEventBus` to update values automatically.
-- `PowerUpUI`: Manages the selection interface after a wave victory.
-- `ScoreUI`: Specifically handles the display of the current coin count/score during the judging phase.
+The project uses **UGUI** with **TextMesh Pro** for all interface elements.
 
-`Location: Assets/Scripts/UI`
+*   `BattleUI`: Displays real-time battle stats (HP, Timer, Phase Name). It updates solely by listening to `GameEventBus`.
+*   `GlobalHUD`: A persistent UI (often in Map or Store) showing player HP and Money from `RunManager`.
+*   `ScoreUI` / `PowerUpUI`: Specialized overlays for showing damage numbers or reward selection.
+*   **Binding**: Logic is decoupled; UI scripts subscribe to `GameEventBus` in `OnEnable` and unsubscribe in `OnDisable` to prevent memory leaks.
+
+**Location**: `Assets/Scripts/UI`
 
 ## 7. Asset & Data Model
-- **Prefabs**: `Coin` prefabs are instantiated by the launcher. They require a `Rigidbody` and a `CoinLifespan` component.
-- **Physics Materials**: `BouncyPhysicsMaterial` and others are used to tune the "feel" of coin collisions.
-- **Constants**: `GameConstants.cs` acts as the primary source of truth for game balancing.
-- **Universal Render Pipeline (URP)**: The project uses URP with specific settings for Mobile and PC, utilizing `VolumeProfiles` for post-processing effects like Bloom or Camera Shake.
+*   **ScriptableObjects**:
+    *   `ItemData`: Defines inventory items and `coinPrefabOverride` for changing the coin's physical shape (e.g., `CubeBulletItem`).
+    *   `MapNodeData`: Defines properties for map locations (Type, Icon, Name).
+*   **Prefabs**:
+    *   `Coin`: The standard physics object with a `Rigidbody` and `CoinLifespan`.
+    *   `CubeCoin`: An alternative projectile shape used for different gameplay feel.
+*   **Physics Materials**: `BouncyPhysicsMaterial` and `CoinPhysicsMaterial` are used to fine-tune the "feel" of the coin toss.
 
-`Location: Assets/Scripts/Data, Assets/Settings`
+**Location**: `Assets/Scripts/Data` and `Assets/Settings`
 
 ## 8. Notes, Caveats & Gotchas
-- **Physics Instability**: Coins rely on `CollisionDetectionMode.Continuous` inside the vessel to prevent tunneling through the mesh at high velocities.
-- **Input System**: Uses the **New Input System**; the `CoinLauncher` specifically reads from `Mouse.current.scroll`.
-- **Coin Management**: The `Vessel` handles coin "ownership". If a coin exits the trigger, its lifespan timer (destruction) is resumed.
-- **Memory/Performance**: Old coins are destroyed via `KillZone` or `CoinLifespan` to prevent excessive physics objects from impacting performance.
-- **Scale Influence**: Non-uniform scaling on the `Vessel` or its parent can cause physics artifacts; currently, coins are managed via physical forces rather than parenting to avoid these issues.
+*   **Mouse Wheel Limitation**: The `CoinLauncher` is hardcoded to only detect **forward** scroll (positive Y delta). Backward scrolling is ignored.
+*   **Continuous Collision**: `Vessel` dynamically switches coins to `CollisionDetectionMode.Continuous` when they enter the trigger to prevent high-speed coins from tunneling through the bottom.
+*   **Singleton Dependency**: Many systems (UI, Managers) assume `RunManager.Instance` is present. If starting from `BattleScene` directly, `GameManager` will attempt to spawn a debug `RunManager`.
+*   **Bounciness Warning**: `StageConfig` modifies the `PhysicsMaterial` asset directly in the project. Changes made during Play Mode will persist after exiting unless handled carefully.
+*   **Physics Step**: Since the game relies on precise coin landing, ensure the Project Settings `Fixed Timestep` is consistent (default 0.02s) to avoid non-deterministic behavior.
