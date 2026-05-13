@@ -92,9 +92,11 @@ public class GameManager : MonoBehaviour
                 // 5. Enemy Phase
                 stateMachine.Transition(GameStateMachine.State.EnemyPhase);
                 battleUI.SetPhaseText("ENEMY PHASE");
+                GameEventBus.PublishEnemyAttackStarted();
                 playerManager.TakeDamage(GameConstants.ENEMY_ATTACK_DAMAGE);
                 yield return new WaitForSeconds(GameConstants.DISPLAY_DURATION);
-                
+                GameEventBus.PublishEnemyAttackFinished();
+
                 // ターン終了時に器のコインをリセット
                 vessel.ResetCoins();
 

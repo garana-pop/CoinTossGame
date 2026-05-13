@@ -13,8 +13,11 @@ public static class GameEventBus
     public static event Action<int, int> OnEnemyDamaged;   // 敵ダメージ: (ダメージ量, 残りHP)
     public static event Action OnEnemyDefeated;  // 敵を倒したとき
     
+    public static event Action OnEnemyAttackStarted;  // 敵の攻撃開始
+    public static event Action OnEnemyAttackFinished; // 敵の攻撃終了
+    
     public static event Action<int, int> OnPlayerDamaged;  // プレイヤーダメージ: (ダメージ量, 残りHP)
-    public static event Action OnPlayerDefeated; // プレイヤーが倒れたとき
+public static event Action OnPlayerDefeated; // プレイヤーが倒れたとき
 
     public static event Action OnPowerUpSelected; // パワーアップを選択したとき
     public static event Action OnWaveStarted;    // ウェーブが開始されたとき
@@ -53,8 +56,18 @@ public static class GameEventBus
     public static void PublishEnemyDefeated() => OnEnemyDefeated?.Invoke();
 
     /// <summary>
-    /// プレイヤーがダメージを受けたことを購読者に通知します。
+    /// 敵の攻撃開始を購読者に通知します。
     /// </summary>
+    public static void PublishEnemyAttackStarted() => OnEnemyAttackStarted?.Invoke();
+
+    /// <summary>
+    /// 敵の攻撃終了を購読者に通知します。
+    /// </summary>
+    public static void PublishEnemyAttackFinished() => OnEnemyAttackFinished?.Invoke();
+
+    /// <summary>
+    /// プレイヤーがダメージを受けたことを購読者に通知します。
+/// </summary>
     /// <param name="damage">受けたダメージ量</param>
     /// <param name="remaining">プレイヤーの残りHP</param>
     public static void PublishPlayerDamaged(int damage, int remaining) => OnPlayerDamaged?.Invoke(damage, remaining);
