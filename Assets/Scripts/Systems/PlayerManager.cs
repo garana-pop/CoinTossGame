@@ -7,7 +7,14 @@ public class PlayerManager : MonoBehaviour
 
     private void Awake()
     {
-        CurrentHP = MaxHP;
+        if (RunManager.Instance != null)
+        {
+            CurrentHP = RunManager.Instance.CurrentHP;
+        }
+        else
+        {
+            CurrentHP = MaxHP;
+        }
     }
 
     private void OnEnable()
@@ -22,13 +29,20 @@ public class PlayerManager : MonoBehaviour
 
     private void ResetHPOnFirstWave()
     {
-        // 最初のウェーブ開始時にのみ全回復させるなどの処理（必要なら）
+        // マップ形式ではRunManagerが管理するため、ここでは何もしないか、
+        // 必要に応じて初期化処理を書く
     }
 
     public void TakeDamage(int damage)
     {
         CurrentHP -= damage;
         CurrentHP = Mathf.Max(0, CurrentHP);
+        
+        if (RunManager.Instance != null)
+        {
+            RunManager.Instance.UpdateHP(CurrentHP);
+        }
+
         GameEventBus.PublishPlayerDamaged(damage, CurrentHP);
 
         if (CurrentHP <= 0)

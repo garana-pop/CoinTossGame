@@ -36,10 +36,22 @@ private float peakWheelVelocity = 0f;  // スクロール中に記録した最�
 
     public void SetCoinsPerLaunch(int count) => coinsPerLaunch = count;
     public void AddCoinsPerLaunch(int amount) => coinsPerLaunch += amount;
-    public void ChangeCoinPrefab(GameObject newPrefab) => coinPrefab = newPrefab;
+    public void ChangeCoinPrefab(GameObject newPrefab)
+    {
+        coinPrefab = newPrefab;
+        if (RunManager.Instance != null) RunManager.Instance.CurrentCoinPrefab = newPrefab;
+    }
+
+    private void Start()
+    {
+        if (RunManager.Instance != null && RunManager.Instance.CurrentCoinPrefab != null)
+        {
+            coinPrefab = RunManager.Instance.CurrentCoinPrefab;
+        }
+    }
 
     private void Update()
-    {
+{
         // 新Input Systemでのホイール取得
         float scroll = Mouse.current.scroll.ReadValue().y / 120f;
 

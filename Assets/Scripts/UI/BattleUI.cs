@@ -18,7 +18,8 @@ public class BattleUI : MonoBehaviour
 
     private void ResetUI()
     {
-        UpdatePlayerHP(GameConstants.PLAYER_MAX_HP);
+        int currentHP = RunManager.Instance != null ? RunManager.Instance.CurrentHP : GameConstants.PLAYER_MAX_HP;
+        UpdatePlayerHP(currentHP);
         UpdateEnemyHP(GameConstants.ENEMY_BASE_HP);
         timerText.text = "00.0";
     }

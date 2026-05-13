@@ -18,10 +18,20 @@ public class EnemyManager : MonoBehaviour
 
     private void HandleWaveStarted()
     {
-        waveCount++;
-        MaxHP = Mathf.RoundToInt(GameConstants.ENEMY_BASE_HP * (1 + (waveCount - 1) * GameConstants.ENEMY_HP_SCALE_PER_WAVE));
+        int floor = 1;
+        if (RunManager.Instance != null)
+        {
+            floor = RunManager.Instance.CurrentFloor;
+        }
+        else
+        {
+            waveCount++;
+            floor = waveCount;
+        }
+
+        MaxHP = Mathf.RoundToInt(GameConstants.ENEMY_BASE_HP * (1 + (floor - 1) * GameConstants.ENEMY_HP_SCALE_PER_WAVE));
         CurrentHP = MaxHP;
-        Debug.Log($"Enemy spawned: HP {CurrentHP}");
+        Debug.Log($"Enemy spawned: Floor {floor}, HP {CurrentHP}");
     }
 
     public void TakeDamage(int damage)

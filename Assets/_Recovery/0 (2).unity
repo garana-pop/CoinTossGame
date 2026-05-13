@@ -2200,7 +2200,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyCameraController
   cameraRig: {fileID: 933972240}
   focusTarget: {fileID: 1534784142}
-  focusOffset: {x: 0, y: 1, z: -4}
+  focusOffset: {x: 0, y: 1, z: 0}
   smoothTime: 0.6
 --- !u!114 &1534784140
 MonoBehaviour:
