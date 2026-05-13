@@ -20,6 +20,7 @@ public class CoinLauncher : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip[] shotSounds;
     [SerializeField] private CameraShake cameraShake;
+    [SerializeField] private ParticleSystem muzzleFlash;
     [SerializeField] private float minPitch = 0.8f;
     [SerializeField] private float maxPitch = 1.2f;
     [SerializeField] private float minShakeMagnitude = 0.05f;
@@ -175,6 +176,12 @@ GameEventBus.PublishCoinThrown();
         {
             float magnitude = Mathf.Lerp(minShakeMagnitude, maxShakeMagnitude, forcePercent);
             cameraShake.Shake(shakeDuration, magnitude);
+        }
+
+        // マズルフラッシュ
+        if (muzzleFlash != null)
+        {
+            muzzleFlash.Play();
         }
         }
 

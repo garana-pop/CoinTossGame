@@ -1,102 +1,78 @@
-# CoinTossGame Technical Overview
+# Project Overview: CoinTossGame
 
 ## 1. Project Description
-**CoinTossGame** is a physics-based "coin pusher" battle game where players launch coins into a target vessel using a mouse wheel "flick" gesture. The project is designed as a wave-based survival experience where coin accuracy directly translates to damage against enemies. It is built for **Windows Standalone** using **Unity 6 (6000.4.4f1)** and the **Universal Render Pipeline (URP)**.
-
-### Core Pillars
-- **Physical Mastery:** Launching coins with the mouse wheel requires timing and speed control.
-- **Strategic Accumulation:** Maximizing the number of coins held in the vessel during a limited player phase.
-- **Progression:** Choosing power-ups between waves to survive escalating enemy difficulty.
-
----
+**CoinTossGame** is a physics-based battle game where the player launches coins into a container (the Vessel) to deal damage to enemies. The game combines mechanical skill (mouse-wheel-based launching) with turn-based RPG elements. It is designed for PC, utilizing the high-precision input of a mouse wheel to control the velocity of coin throws. The core experience centers on maximizing the number of coins successfully landed in the vessel within a limited timeframe to defeat progressively stronger enemies.
 
 ## 2. Gameplay Flow / User Loop
-The experience follows a rigid state-based loop controlled by a Central Game State Machine:
-
-1.  **Wave Start:** System initializes the enemy for the current wave (scaling HP based on wave number).
-2.  **Player Phase (Launching):** The player has 10 seconds to launch as many coins as possible into the vessel using the mouse wheel.
-3.  **Judging Phase:** A brief pause (2 seconds) allows physics to settle.
-4.  **Damage Phase:** The number of coins in the vessel is counted. Each coin deals damage (10 dmg/coin) to the enemy.
-5.  **Enemy Phase:** If the enemy survives, the player takes fixed damage.
-6.  **PowerUp Phase:** Upon enemy defeat, the player selects from randomly generated upgrades.
-7.  **Wave Transit:** The arena resets, and the next wave begins.
-8.  **Game Over:** Triggered when Player HP reaches zero.
-
----
+1.  **Wave Start**: A new enemy is spawned with HP scaled based on the current wave number.
+2.  **Player Phase (Launching)**: The player has 10 seconds (`TURN_TIME_LIMIT`) to launch as many coins as possible into the vessel using the mouse wheel.
+3.  **Judging Phase**: A short pause (`JUDGE_DURATION`) allows the physics simulation to settle, determining how many coins remained in the vessel.
+4.  **Damage Phase**: The enemy takes damage equal to the number of coins in the vessel multiplied by `SCORE_PER_COIN`.
+5.  **Enemy Phase**: If the enemy survives, it deals a fixed amount of damage to the player.
+6.  **Power-Up Phase**: Upon defeating an enemy, the player chooses from three randomized upgrades before moving to the next wave.
+7.  **Game Over**: Occurs when the player's HP reaches zero.
 
 ## 3. Architecture
-The project employs a **Centralized Management** pattern combined with a **Static Event Bus** for decoupled communication.
+The project follows a **Decoupled Event-Driven Architecture** centered around a central `GameEventBus` and a State Machine.
 
-### Core Architecture Components
-*   `GameManager`: The central brain. Orchestrates the high-level game loop using Coroutines and manages transitions between states.
-*   `GameStateMachine`: A pure C# class that defines the valid transitions between game phases (Idle, Launching, Judging, etc.).
-*   `GameEventBus`: A static class containing C# `Action` events. This allows systems like the UI or Score Manager to react to gameplay events (e.g., `OnCoinLanded`, `OnEnemyDamaged`) without direct references to the source.
-*   `GameConstants`: A static class containing all magic numbers (gravity, forces, HP scales, durations) for easy balancing.
+### Core Management
+*   `GameManager`: The central coordinator that manages the high-level game loop using a Coroutine-based sequence. It references all major systems and handles state transitions.
+*   `GameStateMachine`: A pure C# class that defines the valid transitions between game states (e.g., `Launching` -> `Judging` -> `DamagePhase`).
+*   `GameEventBus`: A static class acting as a global message broker. Systems subscribe to events (e.g., `OnCoinLanded`, `OnEnemyDefeated`) to react to game changes without direct coupling.
 
-**Location:** `Assets/Scripts/Core`
-
----
+`Location: Assets/Scripts/Core`
 
 ## 4. Game Systems & Domain Concepts
 
-### Launching System (Input to Physics)
-Translates hardware mouse wheel velocity into physical impulse.
-*   `CoinLauncher`: Captures scroll delta, tracks peak velocity, and applies a scaled force to coin prefabs. It includes jitter/randomization to prevent perfect repetition.
-*   `CoinLifespan`: Automatically destroys coins that fall out of bounds or fail to enter the vessel after a timeout.
+### Launching System
+Uses a unique mouse-wheel velocity detection mechanism.
+*   `CoinLauncher`: Measures the scroll speed of the mouse wheel. If it exceeds a threshold, it instantiates a coin and applies force proportional to the scroll velocity.
+*   `CameraShake`: Provides tactile feedback by shaking the camera based on the launch force.
 
-**Location:** `Assets/Scripts/Gameplay`
+`Location: Assets/Scripts/Gameplay`
 
-### Vessel & Scoring System
-Handles the "Target" logic and coin counting.
-*   `Vessel`: Uses a `HashSet<Collider>` with `OnTriggerEnter/Exit` to accurately track coins. It modifies coin physics (dampening) upon entry to help them stay within the container.
-*   `ScoreManager`: Listens to `GameEventBus.OnCoinLanded` to update the current score/damage potential.
+### Vessel & Physics System
+Manages the "Scoring Area" where coins must land.
+*   `Vessel`: Uses a trigger volume and a `HashSet<Collider>` to track coins currently inside the container. It applies a `dampeningFactor` to incoming coins to help them settle.
+*   `CoinLifespan`: Automatically destroys coins that fall outside the vessel after a set duration to maintain performance.
+*   `KillZone`: Instantly destroys any objects falling out of the world bounds.
 
-**Location:** `Assets/Scripts/Gameplay` and `Assets/Scripts/Systems`
+`Location: Assets/Scripts/Gameplay`
 
-### Entity Management
-Manages health and life cycles of the player and enemies.
-*   `PlayerManager`: Tracks player health.
-*   `EnemyManager`: Tracks enemy health and scales difficulty per wave.
+### Combat & Progression System
+Handles the stats and health of entities.
+*   `PlayerManager`: Tracks player health and triggers game over events.
+*   `EnemyManager`: Manages enemy health, scaling Max HP per wave using `ENEMY_HP_SCALE_PER_WAVE`.
+*   `ScoreManager`: Calculates the potential damage/score based on the current coin count in the vessel.
 
-**Location:** `Assets/Scripts/Systems`
-
----
+`Location: Assets/Scripts/Systems`
 
 ## 5. Scene Overview
-The project is designed to run primarily within a single scene with dynamic state transitions.
-*   `BattleScene.unity`: The main gameplay scene containing the arena, vessel, launcher, and UI overlay.
-*   `0.unity` (Recovery): A fallback/temp scene.
+*   **BattleScene**: The primary scene where gameplay occurs. It contains the `GameManager`, the 3D Vessel setup, the `CoinLauncher`, and the UI Canvas.
+*   **0.unity (_Recovery)**: A backup/recovery scene.
 
-**Scene Flow Rules:**
-- The `GameManager` starts the `GameLoop` coroutine immediately on `Start()`.
-- UI overlays (`BattleUI`, `PowerUpUI`) are toggled based on the `GameStateMachine` state.
+The project is designed to be a single-scene experience where waves are handled by resetting internal states rather than reloading scenes.
 
-**Location:** `Assets/Scenes`
-
----
+`Location: Assets/Scenes`
 
 ## 6. UI System
-The project uses **UGUI** and **TextMesh Pro** for its interface.
-*   `BattleUI`: Displays the current game phase (e.g., "PLAYER PHASE"), turn timer, and current score.
-*   `ScoreUI`: A dedicated component for showing real-time coin counts and damage.
-*   `PowerUpUI`: Managed as a modal screen that appears during the `PowerUp` state. It uses the `GameEventBus.OnPowerUpSelected` event to signal the `GameManager` to resume the loop.
+The UI is built using **Unity UI (uGUI)** and follows a "Push" model via the `GameEventBus`.
+*   `BattleUI`: Displays the current game phase (e.g., "PLAYER PHASE") and wave information.
+*   `ScoreUI`: Updates the coin count and score in real-time by listening to `OnCoinLanded`.
+*   `PowerUpUI`: Displays a selection screen for upgrades after defeating an enemy.
 
-**Location:** `Assets/Scripts/UI`
-
----
+`Location: Assets/Scripts/UI`
 
 ## 7. Asset & Data Model
-*   **Prefabs:** The `Coin` prefab is central, containing a `Rigidbody`, `Collider`, and `CoinLifespan` script.
-*   **Physics Materials:** `BouncyPhysicsMaterial` and `VesselPhysicsMaterial` are used to fine-tune coin interactions (low friction/high bounce for coins).
-*   **Scriptable Data:** While many constants are in `GameConstants.cs`, `StageConfig.cs` is used for per-level or per-arena settings.
-*   **Input:** Uses the **New Input System** (`InputSystem_Actions.inputactions`).
+*   **Constants**: All magic numbers (Force, HP, Timers) are centralized in `GameConstants.cs` for easy balancing.
+*   **Prefabs**: Coins (e.g., `Coin.prefab`, `CubeCoin.prefab`) are the primary dynamic objects. The `CoinLauncher` can be configured to shoot different prefabs.
+*   **Materials**: Physics Materials (`BouncyPhysicsMaterial`, `CoinPhysicsMaterial`) are used to fine-tune the bouncing behavior of coins against the vessel.
+*   **Input**: Uses the **New Input System** (`InputSystem_Actions.inputactions`).
 
-**Location:** `Assets/Prefabs`, `Assets/Materials`, `Assets/Scripts/Data`
-
----
+`Location: Assets/Scripts/Data`, `Assets/Prefabs`, `Assets/Materials`
 
 ## 8. Notes, Caveats & Gotchas
-*   **Physics Scaling:** The `CoinLauncher` scales force based on `GameConstants.WHEEL_VELOCITY_TO_FORCE_SCALE`. Changing this requires recalibrating the vessel distance.
-*   **Continuous Collision:** The `Vessel` script forces `CollisionDetectionMode.Continuous` on coins entering the trigger to prevent them from "tunneling" through the mesh at high speeds.
-*   **Coroutine Dependency:** The entire game loop is a single large Coroutine in `GameManager`. If this script is disabled or the object destroyed, the game state will hang.
-*   **Mouse Wheel Direction:** The code specifically filters for `scroll.y > 0` (forward scroll) for launching. Backwards scrolling is ignored.
+*   **Physics Jitter**: The `Vessel` script sets `collisionDetectionMode` to `Continuous` when a coin enters the trigger to prevent it from clipping through the mesh at high speeds.
+*   **Mouse Wheel Sensitivity**: Launch force is highly dependent on `WHEEL_VELOCITY_TO_FORCE_SCALE`. Changes here significantly impact the difficulty of landing coins.
+*   **State Locking**: The `CoinLauncher` is explicitly enabled/disabled by the `GameManager` to prevent players from throwing coins during the Enemy or Power-Up phases.
+*   **Cleanup**: `vessel.ResetCoins()` is called at the end of every turn/wave to clear the physical coins and prevent performance degradation.
