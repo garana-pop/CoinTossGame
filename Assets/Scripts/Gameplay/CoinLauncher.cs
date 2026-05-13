@@ -178,7 +178,7 @@ GameEventBus.PublishCoinThrown();
             cameraShake.Shake(shakeDuration, magnitude);
         }
 
-        // マズルフラッシュ
+        // マズルフラッシュ（視覚効果）
         if (muzzleFlash != null)
         {
             muzzleFlash.Play();
