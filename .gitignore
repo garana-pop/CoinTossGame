@@ -144,8 +144,23 @@ InitTestScene*.unity*
 !/Assets/Editor/**/
 !/Assets/Editor/**/*.meta
 
-# Packages と ProjectSettings は追跡対象にする
-!/Packages
-!/Packages/**
+# ============================================================
+# Packages: manifest.json / packages-lock.json のみ追跡
+# RelayApp~ などのバイナリキャッシュは除外
+# ============================================================
+
+# Packages直下を全て除外してから必要なものだけ解除
+/Packages/*
+
+!/Packages/manifest.json
+!/Packages/packages-lock.json
+
+# com.unity.ai.assistant の大容量バイナリを明示的に除外
+/Packages/com.unity.ai.assistant/
+# ローカルパッケージ参照がある場合に備えた汎用バイナリ除外
+**/RelayApp~/
+**/RelayApp~/**
+
+# ProjectSettings は全て追跡対象にする
 !/ProjectSettings
 !/ProjectSettings/**
