@@ -12,6 +12,8 @@ public class GlobalHUD : MonoBehaviour
     public GameObject inventoryIconPrefab;
     public Button historyButton;
     public GameObject historyPanel;
+    public Button settingsButton;
+    public GameObject settingsPanel;
 
     private void OnEnable()
     {
@@ -38,8 +40,16 @@ public class GlobalHUD : MonoBehaviour
 
         if (historyButton != null && historyPanel != null)
         {
+            historyButton.onClick.RemoveAllListeners();
             historyButton.onClick.AddListener(() => historyPanel.SetActive(true));
             historyPanel.SetActive(false);
+        }
+
+        if (settingsButton != null && settingsPanel != null)
+        {
+            settingsButton.onClick.RemoveAllListeners();
+            settingsButton.onClick.AddListener(() => settingsPanel.SetActive(true));
+            settingsPanel.SetActive(false);
         }
     }
 

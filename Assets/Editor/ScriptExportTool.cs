@@ -25,7 +25,7 @@ public class ScriptExportTool : EditorWindow
     [SerializeField] private Vector2 gitScrollPosition;
 
     // 指定したフォルダのみをスキャン対象にする
-    private static readonly string[] TARGET_FOLDERS = { "Assets/Scripts", "Assets/Plans", "Assets/Editor", "Assets/Settings" };
+    private static readonly string[] TARGET_FOLDERS = { "Assets/Scripts", "Assets/Plans", "Assets/Editor" };
     private string TARGET_FOLDERS_STRING => string.Join(", ", TARGET_FOLDERS);
     private string GIT_ADD_ARGS => "add " + string.Join(" ", TARGET_FOLDERS);
 
@@ -703,7 +703,7 @@ public class ScriptExportTool : EditorWindow
 
                 foundScriptPaths.AddRange(scriptFiles);
             }
-            
+
             totalFoundFiles = foundScriptPaths.Count;
 
             if (debugMode) Debug.Log($"ScriptExportTool: {totalFoundFiles}個のC#ファイルを発見");
