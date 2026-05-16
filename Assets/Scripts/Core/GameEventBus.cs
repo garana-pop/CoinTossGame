@@ -26,8 +26,20 @@ public static class GameEventBus
     public static event Action OnWaveStarted;    // ウェーブが開始されたとき
     
     public static event Action<float> OnTimerUpdated; // 制限時間更新: 残り時間
-
+    public static event Action<string> OnHistoryAdded; // 履歴が追加されたとき
+    
     // ---- Publishメソッド ----
+
+    /// <summary>
+    /// 残り時間の更新を購読者に通知します。
+    /// </summary>
+    /// <param name="remainingTime">残り時間（秒）</param>
+    public static void PublishTimerUpdated(float remainingTime) => OnTimerUpdated?.Invoke(remainingTime);
+
+    /// <summary>
+    /// 履歴が追加されたことを通知します。
+    /// </summary>
+    public static void PublishHistoryAdded(string message) => OnHistoryAdded?.Invoke(message);
 
     /// <summary>
     /// コインを投擲したことを購読者に通知します。
@@ -99,10 +111,4 @@ public static class GameEventBus
     /// ウェーブが開始されたことを購読者に通知します。
     /// </summary>
     public static void PublishWaveStarted() => OnWaveStarted?.Invoke();
-
-    /// <summary>
-    /// 残り時間の更新を購読者に通知します。
-    /// </summary>
-    /// <param name="remainingTime">残り時間（秒）</param>
-    public static void PublishTimerUpdated(float remainingTime) => OnTimerUpdated?.Invoke(remainingTime);
-}
+    }

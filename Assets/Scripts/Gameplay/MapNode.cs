@@ -33,8 +33,16 @@ public class MapNode : MonoBehaviour
 
         switch (data.nodeType)
         {
-case MapNodeData.NodeType.Battle:
+            case MapNodeData.NodeType.Battle:
+                RunManager.Instance.NextBattleType = RunManager.BattleType.Normal;
+                RunManager.Instance.LoadBattle();
+                break;
+            case MapNodeData.NodeType.Elite:
+                RunManager.Instance.NextBattleType = RunManager.BattleType.Elite;
+                RunManager.Instance.LoadBattle();
+                break;
             case MapNodeData.NodeType.Boss:
+                RunManager.Instance.NextBattleType = RunManager.BattleType.Boss;
                 RunManager.Instance.LoadBattle();
                 break;
             case MapNodeData.NodeType.Store:
@@ -42,6 +50,12 @@ case MapNodeData.NodeType.Battle:
                 break;
             case MapNodeData.NodeType.Event:
                 RunManager.Instance.LoadEvent();
+                break;
+            case MapNodeData.NodeType.Treasure:
+                RunManager.Instance.LoadTreasure();
+                break;
+            case MapNodeData.NodeType.Rest:
+                RunManager.Instance.LoadBreak();
                 break;
         }
     }

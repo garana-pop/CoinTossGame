@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -24,8 +24,11 @@ public class ScriptExportTool : EditorWindow
     [SerializeField] private Vector2 scrollPosition;
     [SerializeField] private Vector2 gitScrollPosition;
 
-    // Assets全体をスキャン対象に変更
-    private const string SCRIPT_FOLDER_PATH = "Assets";
+    // 指定したフォルダのみをスキャン対象にする
+    private static readonly string[] TARGET_FOLDERS = { "Assets/Scripts", "Assets/Plans", "Assets/Editor", "Assets/Settings" };
+    private string TARGET_FOLDERS_STRING => string.Join(", ", TARGET_FOLDERS);
+    private string GIT_ADD_ARGS => "add " + string.Join(" ", TARGET_FOLDERS);
+
     private const string OUTPUT_EXTENSION = ".txt";
     private const int MAX_FILE_DISPLAY_COUNT = 50;
 
@@ -118,7 +121,7 @@ public class ScriptExportTool : EditorWindow
         };
 
         EditorGUILayout.LabelField("Script Export Tool", titleStyle);
-        EditorGUILayout.LabelField($"対象: {SCRIPT_FOLDER_PATH} 内のC#ファイル → txt出力 / Git連携", EditorStyles.centeredGreyMiniLabel);
+        EditorGUILayout.LabelField($"対象: {TARGET_FOLDERS_STRING} 内のC#ファイル → txt出力 / Git連携", EditorStyles.centeredGreyMiniLabel);
         EditorGUILayout.LabelField($"プロジェクト: {ProjectRootPath}", EditorStyles.centeredGreyMiniLabel);
 
         EditorGUILayout.Space(10);
@@ -175,9 +178,9 @@ public class ScriptExportTool : EditorWindow
 
         // ① git add
         GUI.enabled = !isGitPushing;
-        if (GUILayout.Button("① git add（変更ファイルをステージング）", GUILayout.Height(30)))
+        if (GUILayout.Button($"① git {GIT_ADD_ARGS}（変更ファイルをステージング）", GUILayout.Height(30)))
         {
-            RunGitCommand("add -A", "ステージング完了（git add -A）");
+            RunGitCommand(GIT_ADD_ARGS, $"ステージング完了（git {GIT_ADD_ARGS}）");
         }
 
         EditorGUILayout.Space(3);
@@ -447,13 +450,13 @@ public class ScriptExportTool : EditorWindow
 
         try
         {
-            // git add -A
-            var addResult = ExecuteGit("add -A");
-            AppendLog("add -A", addResult);
+            // git add
+            var addResult = ExecuteGit(GIT_ADD_ARGS);
+            AppendLog(GIT_ADD_ARGS, addResult);
 
             if (addResult.exitCode != 0)
             {
-                EditorUtility.DisplayDialog("エラー", "git add に失敗しました。ログを確認してください。", "OK");
+                EditorUtility.DisplayDialog("エラー", $"git {GIT_ADD_ARGS} に失敗しました。ログを確認してください。", "OK");
                 return;
             }
 
@@ -675,7 +678,7 @@ public class ScriptExportTool : EditorWindow
     #region Core Methods
 
     /// <summary>
-    /// ★変更点：Assets全体（Packages除く）をスキャン
+    /// 指定されたフォルダのみをスキャン
     /// </summary>
     private void ScanScriptFiles()
     {
@@ -685,22 +688,25 @@ public class ScriptExportTool : EditorWindow
 
         try
         {
-            // Application.dataPath = "C:/Users/wakam/CoinTossGame/Assets"
-            string fullScriptPath = Application.dataPath;
-
-            if (!Directory.Exists(fullScriptPath))
+            foreach (string folder in TARGET_FOLDERS)
             {
-                if (debugMode) Debug.LogWarning($"ScriptExportTool: フォルダーが見つかりません: {fullScriptPath}");
-                return;
+                string fullPath = Path.Combine(ProjectRootPath, folder);
+
+                if (!Directory.Exists(fullPath))
+                {
+                    if (debugMode) Debug.LogWarning($"ScriptExportTool: フォルダーが見つかりません: {fullPath}");
+                    continue;
+                }
+
+                SearchOption searchOption = includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                string[] scriptFiles = Directory.GetFiles(fullPath, "*.cs", searchOption);
+
+                foundScriptPaths.AddRange(scriptFiles);
             }
+            
+            totalFoundFiles = foundScriptPaths.Count;
 
-            SearchOption searchOption = includeSubfolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-            string[] scriptFiles = Directory.GetFiles(fullScriptPath, "*.cs", searchOption);
-
-            foundScriptPaths.AddRange(scriptFiles);
-            totalFoundFiles = scriptFiles.Length;
-
-            if (debugMode) Debug.Log($"ScriptExportTool: {totalFoundFiles}個のC#ファイルを発見 (対象: {fullScriptPath})");
+            if (debugMode) Debug.Log($"ScriptExportTool: {totalFoundFiles}個のC#ファイルを発見");
         }
         catch (Exception e)
         {

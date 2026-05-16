@@ -17,6 +17,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/EventScene.unity
     guid: 08808601df3fa50488622c440fd23876
+  - enabled: 1
+    path: Assets/Scenes/TreasureScene.unity
+    guid: 5446d609b520aaa4bbc213042545f56c
+  - enabled: 1
+    path: Assets/Scenes/BreakScene.unity
+    guid: 72e9674599a437649a1c583e446c4627
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

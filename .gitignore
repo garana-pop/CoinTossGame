@@ -88,9 +88,6 @@ InitTestScene*.unity*
 /[Aa]ssets/StreamingAssets/aa*
 /[Aa]ssets/AddressableAssetsData/link.xml*
 /[Aa]ssets/Addressables_Temp*
-# By default, Addressables content builds will generate addressables_content_state.bin
-# files in platform-specific subfolders, for example:
-# /Assets/AddressableAssetsData/OSX/addressables_content_state.bin
 /[Aa]ssets/AddressableAssetsData/*/*.bin*
 
 # Visual Scripting auto-generated files
@@ -104,3 +101,51 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# ============================================================
+# [カスタム設定] 管理対象フォルダの限定
+# Assets/ 配下を全て無視し、特定フォルダのみ追跡対象にする
+# 追跡対象: .cs / .md / .txt ファイルとそれぞれの .meta のみ
+# ============================================================
+
+# Assets直下を全て除外
+/Assets/*
+/Assets.meta
+
+# --- Scripts フォルダ（.cs と .meta のみ） ---
+!/Assets/Scripts
+!/Assets/Scripts.meta
+!/Assets/Scripts/**
+/Assets/Scripts/**
+!/Assets/Scripts/**/*.cs
+!/Assets/Scripts/**/*.cs.meta
+!/Assets/Scripts/**/
+!/Assets/Scripts/**/*.meta
+
+# --- Plans フォルダ（.md / .txt と .meta のみ） ---
+!/Assets/Plans
+!/Assets/Plans.meta
+!/Assets/Plans/**
+/Assets/Plans/**
+!/Assets/Plans/**/*.md
+!/Assets/Plans/**/*.md.meta
+!/Assets/Plans/**/*.txt
+!/Assets/Plans/**/*.txt.meta
+!/Assets/Plans/**/
+!/Assets/Plans/**/*.meta
+
+# --- Editor フォルダ（.cs と .meta のみ） ---
+!/Assets/Editor
+!/Assets/Editor.meta
+!/Assets/Editor/**
+/Assets/Editor/**
+!/Assets/Editor/**/*.cs
+!/Assets/Editor/**/*.cs.meta
+!/Assets/Editor/**/
+!/Assets/Editor/**/*.meta
+
+# Packages と ProjectSettings は追跡対象にする
+!/Packages
+!/Packages/**
+!/ProjectSettings
+!/ProjectSettings/**

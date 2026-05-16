@@ -8,7 +8,10 @@ public class MapNodeData : ScriptableObject
         Battle,
         Store,
         Event,
-        Boss
+        Boss,
+        Elite,
+        Treasure,
+        Rest
     }
 
     public NodeType nodeType;

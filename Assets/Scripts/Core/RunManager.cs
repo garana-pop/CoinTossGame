@@ -11,13 +11,24 @@ public class RunManager : MonoBehaviour
 
     [Header("Player Status")]
     public int CurrentHP;
+    public int MaxHP = GameConstants.PLAYER_MAX_HP;
     public int Money;
     public GameObject CurrentCoinPrefab;
     public GameObject defaultCoinPrefab;
 
+    public enum BattleType
+    {
+        Normal,
+        Elite,
+        Boss
+    }
+
     [Header("Progress")]
     public int CurrentFloor = 1;
+    public BattleType NextBattleType = BattleType.Normal;
     public List<string> Inventory = new List<string>();
+    public float PlayTime { get; private set; }
+    public List<string> HistoryLog { get; private set; } = new List<string>();
 
     private void Awake()
     {
@@ -33,30 +44,58 @@ public class RunManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        PlayTime += Time.deltaTime;
+    }
+
     public void InitializeRun()
     {
-        CurrentHP = GameConstants.PLAYER_MAX_HP;
+        MaxHP = GameConstants.PLAYER_MAX_HP;
+        CurrentHP = MaxHP;
         Money = 0;
         CurrentFloor = 1;
         Inventory.Clear();
+        HistoryLog.Clear();
+        PlayTime = 0;
         CurrentCoinPrefab = defaultCoinPrefab;
+        RecordHistory("Game Started");
+    }
+
+    public void RecordHistory(string message)
+    {
+        HistoryLog.Add(message);
+        GameEventBus.PublishHistoryAdded(message);
+        Debug.Log($"[History] {message}");
     }
 
     public void AddMoney(int amount)
     {
         Money += amount;
+        RecordHistory($"Gained {amount} Money (Total: {Money})");
         GameEventBus.PublishMoneyChanged(Money);
     }
 
     public void SubtractMoney(int amount)
     {
         Money -= amount;
+        RecordHistory($"Spent {amount} Money (Total: {Money})");
         GameEventBus.PublishMoneyChanged(Money);
     }
 
     public void UpdateHP(int hp)
     {
+        int diff = hp - CurrentHP;
         CurrentHP = hp;
+        if (diff > 0) RecordHistory($"Healed {diff} HP (Current: {CurrentHP}/{MaxHP})");
+        else if (diff < 0) RecordHistory($"Took {Mathf.Abs(diff)} Damage (Current: {CurrentHP}/{MaxHP})");
+    }
+
+    public void AddItem(string itemName)
+    {
+        Inventory.Add(itemName);
+        RecordHistory($"Obtained Item: {itemName}");
+        GameEventBus.PublishItemObtained();
     }
 
     // シーン遷移用ショートカット
@@ -64,4 +103,6 @@ public class RunManager : MonoBehaviour
     public void LoadBattle() => SceneManager.LoadScene("BattleScene");
     public void LoadStore() => SceneManager.LoadScene("StoreScene");
     public void LoadEvent() => SceneManager.LoadScene("EventScene");
+    public void LoadTreasure() => SceneManager.LoadScene("TreasureScene");
+    public void LoadBreak() => SceneManager.LoadScene("BreakScene");
 }

@@ -30,6 +30,21 @@ public class EnemyManager : MonoBehaviour
         }
 
         MaxHP = Mathf.RoundToInt(GameConstants.ENEMY_BASE_HP * (1 + (floor - 1) * GameConstants.ENEMY_HP_SCALE_PER_WAVE));
+        
+        // バトルタイプによる補正
+        if (RunManager.Instance != null)
+        {
+            switch (RunManager.Instance.NextBattleType)
+            {
+                case RunManager.BattleType.Elite:
+                    MaxHP = Mathf.RoundToInt(MaxHP * 1.5f);
+                    break;
+                case RunManager.BattleType.Boss:
+                    MaxHP = Mathf.RoundToInt(MaxHP * 3.0f);
+                    break;
+            }
+        }
+
         CurrentHP = MaxHP;
         Debug.Log($"Enemy spawned: Floor {floor}, HP {CurrentHP}");
     }
