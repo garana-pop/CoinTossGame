@@ -26,6 +26,7 @@ public class RunManager : MonoBehaviour
     [Header("Progress")]
     public int CurrentFloor = 1;
     public BattleType NextBattleType = BattleType.Normal;
+    public MapGraphData currentMap;
     public List<string> Inventory = new List<string>();
     public float PlayTime { get; private set; }
     public List<string> HistoryLog { get; private set; } = new List<string>();
@@ -59,7 +60,14 @@ public class RunManager : MonoBehaviour
         HistoryLog.Clear();
         PlayTime = 0;
         CurrentCoinPrefab = defaultCoinPrefab;
+
+        InitializeMap();
         RecordHistory("Game Started");
+    }
+
+    private void InitializeMap()
+    {
+        currentMap = MapGenerator.GenerateMap(15, 18);
     }
 
     public void RecordHistory(string message)
